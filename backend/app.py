@@ -250,4 +250,5 @@ def handle_clear_canvas(data):
 
 if __name__ == '__main__':
     # Use gevent for async support
-    socketio.run(app, host='0.0.0.0', port=5001)
+    port = int(os.environ.get('PORT', 5001))
+    socketio.run(app, host='0.0.0.0', port=port)

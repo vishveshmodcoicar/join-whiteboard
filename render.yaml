@@ -1,0 +1,21 @@
+services:
+  # Backend Flask-SocketIO Service
+  - type: web
+    name: join-whiteboard-backend
+    env: python
+    region: oregon
+    plan: free
+    buildCommand: pip install -r backend/requirements.txt
+    startCommand: cd backend && python app.py
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.10.0
+
+  # Frontend React Static Site
+  # Note: Static sites need to be configured manually in Render dashboard
+  # Set REACT_APP_SOCKET_URL environment variable to your backend URL
+  - type: web
+    name: join-whiteboard-frontend
+    env: static
+    buildCommand: cd frontend && npm install && npm run build
+    staticPublishPath: frontend/build

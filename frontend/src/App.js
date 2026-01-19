@@ -4,7 +4,7 @@ import ToolBar from './components/ToolBar.js';
 import Canvas from './components/Canvas.js';
 import './App.css';
 
-const SOCKET_URL = 'http://localhost:5001';
+const SOCKET_URL = process.env.REACT_APP_SOCKET_URL || 'http://localhost:5001';
 
 function App() {
   const [socket, setSocket] = useState(null);
