@@ -1,7 +1,7 @@
 """
 Join: An Interactive Whiteboard - Backend
 """
-import eventlet
+import gevent
 import time
 import os
 from flask import Flask, request, send_from_directory
@@ -33,23 +33,33 @@ def handle_join_room(data):
     Handles a user joining a room.
     data = { 'room': str, 'username': str }
     """
-    room_id = data['room']
-    username = data['username']
-    sid = request.sid
+    try:
+        room_id = data.get('room')
+        username = data.get('username')
+        sid = request.sid
 
-    # Create room if it doesn't exist
-    if room_id not in rooms:
-        rooms[room_id] = {'users': {}, 'canvas': [], 'redo_stack': []}
-    # Add user to room
-    rooms[room_id]['users'][sid] = {'username': username, 'cursor': None}
-    join_room(room_id)
+        if not room_id or not username:
+            emit('error', {'message': 'Missing room or username'}, room=sid)
+            return
 
-    # Notify all users in the room about the new user list
-    user_list = [user['username'] for user in rooms[room_id]['users'].values()]
-    emit('user_list', {'users': user_list}, room=room_id)
+        # Create room if it doesn't exist
+        if room_id not in rooms:
+            rooms[room_id] = {'users': {}, 'canvas': [], 'redo_stack': []}
+        
+        # Add user to room
+        rooms[room_id]['users'][sid] = {'username': username, 'cursor': None}
+        join_room(room_id)
 
-    # Send current canvas state to the new user (sorted by timestamp)
-    emit('canvas_state', {'canvas': get_sorted_canvas(room_id)}, room=sid)
+        # Notify all users in the room about the new user list
+        user_list = [user['username'] for user in rooms[room_id]['users'].values()]
+        emit('user_list', {'users': user_list}, room=room_id)
+
+        # Send current canvas state to the new user (sorted by timestamp)
+        canvas_state = get_sorted_canvas(room_id)
+        emit('canvas_state', {'canvas': canvas_state}, room=sid)
+    except Exception as e:
+        print(f"Error in join_room: {e}")
+        emit('error', {'message': f'Error joining room: {str(e)}'}, room=sid)
 
 @socketio.on('leave_room')
 def handle_leave_room(data):
@@ -141,21 +151,32 @@ def handle_draw_operation(data):
     sid = request.sid
 
     # Validate room and operation
-    if room_id not in rooms or not valid_operation(operation):
-        emit('error', {'message': 'Invalid room or operation'}, room=sid)
+    if not room_id or not operation:
+        emit('error', {'message': 'Missing room or operation'}, room=sid)
+        return
+    
+    if room_id not in rooms:
+        emit('error', {'message': 'Room does not exist'}, room=sid)
+        return
+    
+    if not valid_operation(operation):
+        emit('error', {'message': 'Invalid operation'}, room=sid)
         return
 
+    # Create a copy to avoid mutating the original
+    operation_copy = operation.copy()
+    
     # Assign a timestamp if not present
-    if 'timestamp' not in operation:
-        operation['timestamp'] = time.time()
+    if 'timestamp' not in operation_copy:
+        operation_copy['timestamp'] = time.time()
 
     # Store operation in room's canvas state
-    rooms[room_id]['canvas'].append(operation)
+    rooms[room_id]['canvas'].append(operation_copy)
     # Clear redo stack on new operation
     rooms[room_id]['redo_stack'].clear()
 
     # Broadcast to all other users in the room
-    emit('draw_operation', operation, room=room_id, include_self=False)
+    emit('draw_operation', operation_copy, room=room_id, include_self=False)
 
 # Helper to get sorted canvas by timestamp
 def get_sorted_canvas(room_id):
@@ -228,5 +249,5 @@ def handle_clear_canvas(data):
         emit('canvas_state', {'canvas': []}, room=room_id)
 
 if __name__ == '__main__':
-    # Use eventlet for async support
-    socketio.run(app, host='0.0.0.0', port=5001) 
+    # Use gevent for async support
+    socketio.run(app, host='0.0.0.0', port=5001)
