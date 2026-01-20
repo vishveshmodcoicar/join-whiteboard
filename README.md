@@ -4,12 +4,12 @@ A real-time collaborative whiteboard application built with React and Flask-Sock
 
 ## Features
 
-- 🎨 **Multiple Drawing Tools**: Pen, line, rectangle, circle, text, image, and eraser
-- 👥 **Real-time Collaboration**: Multiple users can draw simultaneously in the same room
-- 🎯 **Live Cursor Tracking**: See where other users are pointing on the canvas
-- ↩️ **Undo/Redo**: Full undo and redo functionality
-- 🎨 **Customizable**: Adjustable brush size and color picker
-- 🚀 **Real-time Sync**: All changes are synchronized instantly across all connected clients
+-  **Multiple Drawing Tools**: Pen, line, rectangle, circle, text, image, and eraser
+-  **Real-time Collaboration**: Multiple users can draw simultaneously in the same room
+-  **Live Cursor Tracking**: See where other users are pointing on the canvas
+-  **Undo/Redo**: Full undo and redo functionality
+-  **Customizable**: Adjustable brush size and color picker
+-  **Real-time Sync**: All changes are synchronized instantly across all connected clients
 
 ## Tech Stack
 
